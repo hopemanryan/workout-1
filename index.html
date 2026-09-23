@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>תוכנית כוח A/B | עומס מרבי 5–7 חזרות</title>
+<style>
+  :root {
+    --bg-dark: #0b1120;
+    --card-bg: #1e293b;
+    --card-border: #334155;
+    --accent-blue: #38bdf8;
+    --accent-orange: #f97316;
+    --text-primary: #f8fafc;
+    --text-muted: #94a3b8;
+    --success: #22c55e;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    line-height: 1.6;
+    padding: 16px;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding: 24px;
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    border-radius: 16px;
+    border: 1px solid var(--card-border);
+  }
+
+  h1 {
+    font-size: 2.1rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    max-width: 720px;
+    margin: 0 auto 16px;
+  }
+
+  .tags-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    padding: 5px 14px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .tag-blue { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); border: 1px solid rgba(56, 189, 248, 0.3); }
+  .tag-orange { background: rgba(249, 115, 22, 0.15); color: var(--accent-orange); border: 1px solid rgba(249, 115, 22, 0.3); }
+  .tag-green { background: rgba(34, 197, 94, 0.15); color: var(--success); border: 1px solid rgba(34, 197, 94, 0.3); }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    justify-content: center;
+  }
+
+  .tab-btn {
+    padding: 12px 24px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    cursor: pointer;
+    background: #1e293b;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+  }
+
+  .tab-btn.active {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #38bdf8;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* Grid Layout */
+  .workout-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 22px;
+    margin-bottom: 36px;
+  }
+
+  .exercise-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .exercise-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+  }
+
+  .equipment-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    background: rgba(148, 163, 184, 0.1);
+    color: var(--accent-blue);
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+  }
+
+  .stats-row {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(11, 17, 32, 0.6);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  .stat-val {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .cues {
+    list-style: none;
+    margin-bottom: 16px;
+    font-size: 0.88rem;
+  }
+
+  .cues li {
+    position: relative;
+    padding-right: 18px;
+    margin-bottom: 6px;
+    color: #cbd5e1;
+  }
+
+  .cues li::before {
+    content: "•";
+    position: absolute;
+    right: 0;
+    color: var(--accent-blue);
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  /* Interactive Video Player */
+  .video-box {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #000;
+    cursor: pointer;
+    margin-bottom: 10px;
+  }
+
+  .video-box img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.2s ease;
+  }
+
+  .video-box:hover img {
+    opacity: 0.85;
+  }
+
+  .play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 64px;
+    height: 64px;
+    background: rgba(220, 38, 38, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    transition: transform 0.2s ease, background 0.2s ease;
+    z-index: 2;
+  }
+
+  .play-btn svg {
+    width: 26px;
+    height: 26px;
+    fill: #ffffff;
+    margin-left: -3px;
+  }
+
+  .video-box:hover .play-btn {
+    transform: translate(-50%, -50%) scale(1.1);
+    background: #ef4444;
+  }
+
+  .video-box iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .yt-link-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 8px;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .yt-link-btn:hover {
+    background: rgba(239, 68, 68, 0.25);
+    color: #ffffff;
+  }
+
+  .info-box {
+    background: #1e293b;
+    border-right: 4px solid var(--accent-orange);
+    border-radius: 10px;
+    padding: 18px;
+    margin-top: 24px;
+    border: 1px solid var(--card-border);
+    border-right-width: 4px;
+  }
+
+  .info-box h3 {
+    color: var(--accent-orange);
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+  }
+
+  .info-box ul {
+    list-style-position: inside;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .info-box li {
+    margin-bottom: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>תוכנית אימונים כבדה A / B</h1>
+    <p class="subtitle">מותאמת לציוד חדר הכושר שלך • עומס מכני מקסימלי 5–7 חזרות • שימור מסת שריר בטיפול במונג'רו</p>
+    <div class="tags-container">
+      <span class="tag tag-blue">5–7 חזרות (RPE 8-9)</span>
+      <span class="tag tag-orange">תעדוף פלג גוף עליון</span>
+      <span class="tag tag-green">שימור שריר קריטי</span>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('workout-a')">אימון A (חזה, כתפיים, יד קדמית)</button>
+    <button class="tab-btn" onclick="switchTab('workout-b')">אימון B (גב, רגליים, יד אחורית)</button>
+  </div>
+
+  <!-- WORKOUT A -->
+  <div id="workout-a" class="tab-content active">
+    <div class="workout-grid">
+
+      <!-- תרגיל 1: Bench Press -->
+      <div class="exercise-card">
+        <div>
+          <div class="exercise-title">1. לחיצת חזה במוט אולימפי (Bench Press)</div>
+          <span class="equipment-badge">ספת לחיצה חופשית אולימפית [תמונה 1]</span>
+          <div class="stats-row">
+            <div class="stat"><span class="stat-label">סטים</span><span class="stat-val">3–4</span></div>
+            <div class="stat"><span class="stat-label">חזרות</span><span class="stat-val">5–7</span></div>
+            <div class="stat"><span class="stat-label">מנוחה</span><span class="stat-val">2.5–3 דק'</span></div>
+            <div class="stat"><span class="stat-label">עצימות</span><span class="stat-val">RPE 8.5</span></div>
+          </div>
+          <ul class="cues">
+            <li>קיבוע שכמות חזק לאחור ולמטה (Retraction) לתוך הספה.</li>
+            <li>הורדת המוט לקו הפטמות התחתון בקצב מבוקר של 2 שניות.</li>
+            <li>לחיצה מתפרצת תוך דחיפת הרצפה בעקבים (Leg Drive).</li>
+          </ul>
+        </div>
+        <div class="video-box" onclick="playVideo(this, 'gRVjAtPip0Y')">
+          <img src="https://img.youtube.com/vi/gRVjAtPip0Y/hqdefault.jpg" alt="Bench Press Tutorial">
+          <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <a class="yt-link-btn" href="https://www.youtube.com/watch?v=gRVjAtPip0Y" target="_blank" rel="noopener noreferrer">
+          ▶ צפה ב-YouTube (Buff Dudes)
+        </a>
+      </div>
+
+      <!-- תרגיל 2: Incline DB Press -->
+      <div class="exercise-card">
+        <div>
+          <div class="exercise-title">2. לחיצת חזה בשיפוע עם דמבלים</div>
+          <span class="equipment-badge">ספה מתכווננת (30°) + דמבלים [תמונות 1, 6]</span>
+          <div class="stats-row">
+            <div class="stat"><span class="stat-label">סטים</span><span class="stat-val">3</span></div>
+            <div class="stat"><span class="stat-label">חזרות</span><span class="stat-val">5–7</span></div>
+            <div class="stat"><span class="stat-label">מנוחה</span><span class="stat-val">2 דקות</span></div>
+            <div class="stat"><span class="stat-label">עצימות</span><span class="stat-val">RPE 8.5</span></div>
+          </div>
+          <ul class="cues">
+            <li>זווית מתונה של כ-30 מעלות להתמקדות בסיבי החזה העליון.</li>
+            <li>מרפקים בזווית 45–60 מעלות מהגוף, מתיחה מלאה בתחתית.</li>
+            <li>שליטה מלאה במשקולות בירידה ללא נפילות.</li>
+          </ul>
+        </div>
+        <div class="video-box" onclick="playVideo(this, 'IP4oeKh1Sd4')">
+          <img src="https://img.youtube.com/vi/IP4oeKh1Sd4/hqdefault.jpg" alt="Incline DB Press">
+          <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <a class="yt-link-btn" href="https://www.youtube.com/watch?v=IP4oeKh1Sd4" target="_blank" rel="noopener noreferrer">
+          ▶ צפה ב-YouTube (Max Euceda)
+        </a>
+      </div>
+
+      <!-- תרגיל 3: Seated DB Shoulder Press -->
+      <div class="exercise-card">
+        <div>
+          <div class="exercise-title">3. לחיצת כתפיים בישיבה עם דמבלים</div>
+          <span class="equipment-badge">ספה בזווית 75°-80° + דמבלים [תמונה 6]</span>
+          <div class="stats-row">
+            <div class="stat"><span class="stat-label">סטים</span><span class="stat-val">3</span></div>
+            <div class="stat"><span class="stat-label">חזרות</span><span class="stat-val">5–7</span></div>
+            <div class="stat"><span class="stat-label">מנוחה</span><span class="stat-val">2 דקות</span></div>
+            <div class="stat"><span class="stat-label">עצימות</span><span class="stat-val">RPE 8.5</span></div>
+          </div>
+          <ul class="cues">
+            <li>משענת כמעט זקופה (75–80 מעלות) להגנה על הגב התחתון.</li>
+            <li>נעילת ליבה מלאה, לחיצה בקו ישר עד נעילה רכה מעל הראש.</li>
+            <li>ירידה מבוקרת עד שגובה המשקולות מגיע לקו האוזניים.</li>
+          </ul>
+        </div>
+        <div class="video-box" onclick="playVideo(this, 'rO_iEImwHyo')">
+          <img src="https://img.youtube.com/vi/rO_iEImwHyo/hqdefault.jpg" alt="Shoulder Press">
+          <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <a class="yt-link-btn" href="https://www.youtube.com/watch?v=rO_iEImwHyo" target="_blank" rel="noopener noreferrer">
+          ▶ צפה ב-YouTube (Max Euceda)
+        </a>
+      </div>
+
+      <!-- תרגיל 4: Cable Lateral Raise -->
+      <div class="exercise-card">
+        <div>
+          <div class="exercise-title">4. הרחקת זרועות לצדדים בכבל</div>
+          <span class="equipment-badge">פולי תחתון בכבלים Life Fitness [תמונות 2, 4]</span>
+          <div class="stats-row">
+            <div class="stat"><span class="stat-label">סטים</span><span class="stat-val">3</span></div>
+            <div class="stat"><span class="stat-label">חזרות</span><span class="stat-val">6–8</span></div>
+            <div class="stat"><span class="stat-label">מנוחה</span><span class="stat-val">90 שניות</span></div>
+            <div class="stat"><span class="stat-label">עצימות</span><span class="stat-val">RPE 9</span></div>
+          </div>
+          <ul class="cues">
+            <li>גובה כבל בגובה ברך/שוק למתח רציף לכל אורך התנועה.</li>
+            <li>הרמה במישור השכמה (מעט אלכסוני קדימה) ולא ישירות לצד.</li>
+            <li>הובלה עם המרפק ללא תנופת גב.</li>
+          </ul>
+        </div>
+        <div class="video-box" onclick="playVideo(this, '_w6ztKA4tO8')">
+          <img src="https://img.youtube.com/vi/_w6ztKA4tO8/hqdefault.jpg" alt="Cable Lateral Raise">
+          <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <a class="yt-link-btn" href="https://www.youtube.com/watch?v=_w6ztKA4tO8" target="_blank" rel="noopener noreferrer">
+          ▶ צפה ב-YouTube (Scott Herman)
+        </a>
+      </div>
+
+      <!-- תרגיל 5: Incline DB Curl -->
+      <div class="exercise-card">
+        <div>
+          <div class="exercise-title">5. כפיפת מרפקים בשיפוע עם דמבלים</div>
+          <span class="equipment-badge">ספה בשיפוע 45°–60° + דמבלים [תמונות 1, 6]</span>
+          <div class="stats-row">
+            <div class="stat"><span class="stat-label">סטים</span><span class="stat-val">3</span></div>
+            <div class="stat"><span class="stat-label">חזרות</span><span class="stat-val">5–7</span></div>
+            <div class="stat"><span class="stat-label">מנוחה</span><span class="stat-val">90 שניות</span></div>
+            <div class="stat"><span class="stat-label">עצימות</span><span class="stat-val">RPE 8.5</span></div>
+          </div>
+          <ul class="cues">
+            <li>מתיחה מקסימלית של הראש הארוך של היד הקדמית (Long Head).</li>
+            <li>מרפקים נשארים נעולים מאחורי קו הגוף לכל אורך הסט.</li>
+            <li>סיבוב פרק כף היד כלפי מעלה (סופינציה) בשיא התנועה.</li>
+          </ul>
+        </div>
+        <div class="video-box" onclick="playVideo(this, 'HhHHBj3qTJ4')">
+          <img src="https://img.youtube.com/vi/HhHHBj3qTJ4/hqdefault.jpg" alt="Incline DB Curl">
+          <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <a class="yt-link-btn" href="https://www.youtube.com/watch?v=HhHHBj3qTJ4" target="_blank" rel="noopener noreferrer">
+          ▶ צפה ב-YouTube (Max Euceda)
+        </a>
+      </div>
+
+      <!-- תרגיל 6: Standing Cable Curl -->
+      <div class="exercise-card">
+        <div>
+          <div class="exercise-title">6. כפיפת מרפקים בפולי תחתון (Cable Curl)</div>
+          <span class="equipment-badge">כבל תחתון + מוט ישר / W [תמונות 2, 5]</span>
+          <div class="stats-row">
+            <div class="stat"><span class="stat-label">סטים</span><span class="stat-val">2–3</span></div>
+            <div class="stat"><span class="stat-label">חזרות</span><span class="stat-val">5–7</span></div>
+            <div class="stat"><span class="stat-label">מנוחה</span><span class="stat-val">90 שניות</span></div>
+            <div class="stat"><span class="stat-label">עצימות</span><span class="stat-val">RPE 9</span></div>
+          </div>
+          <ul class="cues">
+            <li>מתח קבוע על השריר ללא נקודות מנוחה.</li>
+            <li>מרפקים צמודים למותניים, ללא נדנוד גב.</li>
+            <li>כיווץ סטטי של שנייה אחת בשיא העלייה.</li>
+          </ul>
+        </div>
+        <div class="video-box" onclick="playVideo(this, '85kXYq7Ssh4')">
+          <img src="https://img.youtube.com/vi/85kXYq7Ssh4/hqdefault.jpg" alt="Cable Bicep Curl">
+          <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <a class="yt-link-btn" href="https://www.youtube.com/watch?v=85kXYq7Ssh4" target="_blank" rel="noopener noreferrer">
+          ▶ צפה ב-YouTube (Cable Curl Form)
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WORKOUT B -->
+  <div id="workout-b" class="tab-content">
+    <div class="workout-grid">
+
+      <!-- תרגיל 1: Lat Pulldown -->
+      <div class="exercise-card">
+        <div>
+          <div class="exercise-title">1. פולי עליון באחיזה בינונית (Lat Pulldown)</div>
+          <span class="equipment-badge">תחנת פולי עליון Life Fitness [תמונות 2, 3, 5]</span>
+          <div class="stats-row">
+            <div class="stat"><span class="stat-label">סטים</span><span class="stat-val">3–4</span></div>
+            <div class="stat"><span class="stat-label">חזרות</span><span class="stat-val">5–7</span></div>
+            <div class="stat"><span class="stat-label">מנוחה</span><span class="stat-val">2.5 דקות</span></div>
+            <div class="stat"><span class="stat-label">עצימות</span><span class="stat-val">RPE 8.5</span></div>
+          </div>
+          <ul class="cues">
+            <li>אחיזה מעט רחבה יותר מרוחב כתפיים, בית חזה פתוח.</li>
+            <li>הורדת שכמות תחילה, משיכת המוט לעצם הבריח תוך הובלת מרפקים מטה.</li>
+            <li>שליטה מלאה במתיחה למעלה (2 שניות חזרה).</li>
+          </ul>
+        </div>
+        <div class="video-box" onclick="playVideo(this, 'AOpi-p0cJkc')">
+          <img src="https://img.youtube.com/vi/AOpi-p0cJkc/hqdefault.jpg" alt="Lat Pulldown">
+          <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <a class="yt-link-btn" href="https://www.youtube.com/watch?v=AOpi-p0cJkc" target="_blank" rel="noopener noreferrer">
+          ▶ צפה ב-YouTube (SilverSneakers)
+        </a>
+      </div>
+
+      <!-- תרגיל 2: Seated Cable Row -->
+      <div class="exercise-card">
+        <div>
+          <div class="exercise-title">2. חתירה בכבל בישיבה (Seated Cable Row)</div>
+          <span class="equipment-badge">עמדת חתירה נמוכה עם מדרכים [תמונה 5]</span>
+          <div class="stats-row">
+            <div class="stat"><span class="stat-label">סטים</span><span class="stat-val">3</span></div>
+            <div class="stat"><span class="stat-label">חזרות</span><span class="stat-val">5–7</span></div>
+            <div class="stat"><span class="stat-label">מנוחה</span><span class="stat-val">2 דקות</span></div>
+            <div class="stat"><span class="stat-label">עצימות</span><span class="stat-val">RPE 8.5</span></div>
+          </div>
+          <ul class="cues">
+            <li>חזה בולט קדימה, ברכיים כפופות קלות ויציבות על המדרכים.</li>
+            <li>משיכת הידית לכיוון הטבור התחתון וכיווץ חזק של הגב.</li>
+            <li>הימנעות מנדנוד מוגזם של הגב התחתון קדימה ואחורה.</li>
+          </ul>
+        </div>
+        <div class="video-box" onclick="playVideo(this, 'vwHG9Jfu4sw')">
+          <img src="https://img.youtube.com/vi/vwHG9Jfu4sw/hqdefault.jpg" alt="Seated Cable Row">
+          <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <a class="yt-link-btn" href="https://www.youtube.com/watch?v=vwHG9Jfu4sw" target="_blank" rel="noopener noreferrer">
+          ▶ צפה ב-YouTube (Max Euceda)
+        </a>
+      </div>
+
+      <!-- תרגיל 3: Smith Machine Squat -->
+      <div class="exercise-card">
+        <div>
+          <div class="exercise-title">3. סקוואט בסמית' משין (Smith Squat)</div>
+          <span class="equipment-badge">סמית' משין כבד + צלחות [תמונה 1]</span>
+          <div class="stats-row">
+            <div class="stat"><span class="stat-label">סטים</span><span class="stat-val">3</span></div>
+            <div class="stat"><span class="stat-label">חזרות</span><span class="stat-val">5–7</span></div>
+            <div class="stat"><span class="stat-label">מנוחה</span><span class="stat-val">2.5 דקות</span></div>
+            <div class="stat"><span class="stat-label">עצימות</span><span class="stat-val">RPE 8</span></div>
+          </div>
+          <ul class="cues">
+            <li>מיקום כפות הרגליים מעט קדימה מקו המוט להגנה על הגב.</li>
+            <li>ירידה מבוקרת עד שבירת מקביל (90 מעלות ומטה).</li>
+            <li>3 סטים כבדים ומדויקים מספיקים לשמר כוח ומסה ברגליים.</li>
+          </ul>
+        </div>
+        <div class="video-box" onclick="playVideo(this, 'iAcRGCsG_PY')">
+          <img src="https://img.youtube.com/vi/iAcRGCsG_PY/hqdefault.jpg" alt="Smith Machine Squat">
+          <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <a class="yt-link-btn" href="https://www.youtube.com/watch?v=iAcRGCsG_PY" target="_blank" rel="noopener noreferrer">
+          ▶ צפה ב-YouTube (Smith Squat Tutorial)
+        </a>
+      </div>
+
+      <!-- תרגיל 4: Dumbbell RDL -->
+      <div class="exercise-card">
+        <div>
+          <div class="exercise-title">4. דדליפט רומני כבד עם דמבלים</div>
+          <span class="equipment-badge">דמבלים כבדים מהמעמד [תמונה 6]</span>
+          <div class="stats-row">
+            <div class="stat"><span class="stat-label">סטים</span><span class="stat-val">3</span></div>
+            <div class="stat"><span class="stat-label">חזרות</span><span class="stat-val">5–7</span></div>
+            <div class="stat"><span class="stat-label">מנוחה</span><span class="stat-val">2 דקות</span></div>
+            <div class="stat"><span class="stat-label">עצימות</span><span class="stat-val">RPE 8</span></div>
+          </div>
+          <ul class="cues">
+            <li>שליחת הישבן לאחור (Hip Hinge) עם ברכיים כפופות קלות בלבד.</li>
+            <li>דמבלים נעים צמודים לגוף עד מתיחה עמוקה בהמסטרינגס (קו אמצע שוק).</li>
+            <li>עלייה באמצעות כיווץ הישבן ונעילת אגן.</li>
+          </ul>
+        </div>
+        <div class="video-box" onclick="playVideo(this, 'hQgFixeXdZo')">
+          <img src="https://img.youtube.com/vi/hQgFixeXdZo/hqdefault.jpg" alt="Dumbbell RDL">
+          <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <a class="yt-link-btn" href="https://www.youtube.com/watch?v=hQgFixeXdZo" target="_blank" rel="noopener noreferrer">
+          ▶ צפה ב-YouTube (J2FIT Guide)
+        </a>
+      </div>
+
+      <!-- תרגיל 5: Dips -->
+      <div class="exercise-card">
+        <div>
+          <div class="exercise-title">5. מקבילים ליד אחורית (Dips)</div>
+          <span class="equipment-badge">תחנת מקבילים / עמדת בטן ומקבילים [תמונות 1, 4]</span>
+          <div class="stats-row">
+            <div class="stat"><span class="stat-label">סטים</span><span class="stat-val">3</span></div>
+            <div class="stat"><span class="stat-label">חזרות</span><span class="stat-val">5–7</span></div>
+            <div class="stat"><span class="stat-label">מנוחה</span><span class="stat-val">2 דקות</span></div>
+            <div class="stat"><span class="stat-label">עצימות</span><span class="stat-val">RPE 8.5</span></div>
+          </div>
+          <ul class="cues">
+            <li>גוף אנכי וישר (ללא נטייה קדימה) למיקוד מלא ביד האחורית.</li>
+            <li>ירידה מבוקרת עד זווית של 90 מעלות במרפקים ודחיפה חזקה מעלה.</li>
+            <li>אם קל ב-7 חזרות – להוסיף דמבל בין הרגליים.</li>
+          </ul>
+        </div>
+        <div class="video-box" onclick="playVideo(this, '45yRZrGw0I0')">
+          <img src="https://img.youtube.com/vi/45yRZrGw0I0/hqdefault.jpg" alt="Dips Form">
+          <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <a class="yt-link-btn" href="https://www.youtube.com/watch?v=45yRZrGw0I0" target="_blank" rel="noopener noreferrer">
+          ▶ צפה ב-YouTube (Tricep Dips)
+        </a>
+      </div>
+
+      <!-- תרגיל 6: Cable Rope Pushdown -->
+      <div class="exercise-card">
+        <div>
+          <div class="exercise-title">6. פשיטת מרפקים בחבל (Rope Pushdown)</div>
+          <span class="equipment-badge">פולי עליון + חבל שחור [תמונות 2, 4]</span>
+          <div class="stats-row">
+            <div class="stat"><span class="stat-label">סטים</span><span class="stat-val">3</span></div>
+            <div class="stat"><span class="stat-label">חזרות</span><span class="stat-val">5–7</span></div>
+            <div class="stat"><span class="stat-label">מנוחה</span><span class="stat-val">90 שניות</span></div>
+            <div class="stat"><span class="stat-label">עצימות</span><span class="stat-val">RPE 9</span></div>
+          </div>
+          <ul class="cues">
+            <li>מרפקים נעולים במקומם צמוד לצלעות ללא תנועת כתף.</li>
+            <li>פתיחה של קצוות החבל לצדדים בתחתית התנועה לכיווץ שיא.</li>
+            <li>משקל כבד על המחסנית, חזרה איטית ומבוקרת.</li>
+          </ul>
+        </div>
+        <div class="video-box" onclick="playVideo(this, 'vB5OHsJ3EME')">
+          <img src="https://img.youtube.com/vi/vB5OHsJ3EME/hqdefault.jpg" alt="Rope Pushdown">
+          <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <a class="yt-link-btn" href="https://www.youtube.com/watch?v=vB5OHsJ3EME" target="_blank" rel="noopener noreferrer">
+          ▶ צפה ב-YouTube (Scott Herman)
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="info-box">
+    <h3>📌 דגשי יישום ותזונה מותאמים למונג'רו</h3>
+    <ul>
+      <li><strong>חלוקה שבועית מומלצת:</strong> 4 אימונים בשבוע (A1 - B1 - מנוחה - A2 - B2 - מנוחה - מנוחה) או לסירוגין 3 פעמים (A-B-A / B-A-B).</li>
+      <li><strong>העמסה פרוגרסיבית:</strong> ברגע שאתה סוגר 7 חזרות נקיות בכל הסטים, מוסיפים 1.25–2.5 ק"ג לאימון הבא.</li>
+      <li><strong>תזמון אנרגיה:</strong> פחמימה פשוטה קלה (תמר או בננה) כ-45–60 דקות לפני האימון כדי להבטיח גליקוגן זמין להרמות הכבדות.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.add('active');
+    
+    const btns = document.querySelectorAll('.tab-btn');
+    if (tabId === 'workout-a') {
+      btns[0].classList.add('active');
+    } else {
+      btns[1].classList.add('active');
+    }
+  }
+
+  function playVideo(element, videoId) {
+    element.innerHTML = `
+      <iframe 
+        src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0" 
+        frameborder="0" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+        allowfullscreen>
+      </iframe>
+    `;
+    element.onclick = null;
+  }
+</script>
+
+</body>
+</html>
